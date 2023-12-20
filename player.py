@@ -3,13 +3,12 @@ import time
 from os import system
 import platform
 
-
-initial_board = []
+initial_board = []  # двумерный массив игрового поля
 
 
 # функция для очистки консоли
 def clear_the_console():
-    operation_system = platform.system()
+    operation_system = platform.system()  # получаем ОС
     if 'windows' in operation_system:
         system('cls')
     else:
@@ -21,14 +20,16 @@ def read_the_board_from_console():
     print("'X' - крестик\n"
           "'O' - нолик\n"
           "'-' - пустая клетка")
-    str1 = input()
-    str2 = input()
-    str3 = input()
-    temp = [str1[0] if str1[0] != "-" else " ", str1[1] if str1[0] != "-" else " ", str1[2] if str1[2] != "-" else " "]
+    str1 = input()  # ввод первой строки
+    str2 = input()  # ввод второй строки
+    str3 = input()  # ввод третьей строки
+
+    # temp - временный массив, в котором будут храниться строки игрового поля
+    temp = [str1[0] if str1[0] != "-" else " ", str1[1] if str1[1] != "-" else " ", str1[2] if str1[2] != "-" else " "]
     initial_board.append(temp)
-    temp = [str2[0] if str2[0] != "-" else " ", str2[1] if str2[0] != "-" else " ", str2[2] if str2[2] != "-" else " "]
+    temp = [str2[0] if str2[0] != "-" else " ", str2[1] if str2[1] != "-" else " ", str2[2] if str2[2] != "-" else " "]
     initial_board.append(temp)
-    temp = [str3[0] if str3[0] != "-" else " ", str3[1] if str3[0] != "-" else " ", str3[2] if str3[2] != "-" else " "]
+    temp = [str3[0] if str3[0] != "-" else " ", str3[1] if str3[1] != "-" else " ", str3[2] if str3[2] != "-" else " "]
     initial_board.append(temp)
 
 
@@ -36,9 +37,37 @@ def read_the_board_from_console():
 def read_the_board_from_file():
     f = open('board.txt')
     for line in f:
-        temp = [line[0] if line[0] != "-" else " ", line[1] if line[1] != "-" else " ", line[2] if line[2] != "-" else " "]
+        # temp - временный массив, в котором будут храниться строки игрового поля
+        temp = [line[0] if line[0] != "-" else " ", line[1] if line[1] != "-" else " ",
+                line[2] if line[2] != "-" else " "]
         initial_board.append(temp)
     f.close()
+
+
+# функция для проверки пустоты поля
+def is_board_empty(board) -> bool:
+    is_empty = True
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] == "X" or board[i][j] == "O":
+                return False
+    return True
+
+
+# функция для определения выигрышной клеточки противника
+def defense(board):
+    best_move = (-1, -1)
+    for i in range(3):
+        for j in range(3):
+            if board[i][j] == "-":
+                board[i][j] = "O"
+                if is_winner(initial_board, "O"):
+                    best_move = (i, j)
+                    return best_move
+                else:
+                    board[i][j] = " "
+                    continue
+    return best_move
 
 
 # красивый вывод игрового поля
@@ -50,7 +79,7 @@ def print_board(board):
 
 
 # проверяет выиграл ли игрок
-def is_winner(board, player):
+def is_winner(board, player) -> bool:
     for i in range(3):
         if all(board[i][j] == player for j in range(3)) or all(board[j][i] == player for j in range(3)):
             return True
@@ -124,7 +153,7 @@ def find_best_move(board, last_player):
 
 
 def main():
-    last_player = 'O'
+    last_player = 'X'
     ans = int(input("Как вы хотите вводить игровое поле?\n"
                     "(1) - Консоль\n"
                     "(2) - Файлик\n"))
@@ -146,13 +175,26 @@ def main():
     else:
         print("Не понял ответа...")
         exit(0)
+
     clear_the_console()
     print("Исходное поле:")
     print_board(initial_board)
-    best_move = find_best_move(copy.deepcopy(initial_board), last_player)
+
+    # если ввели пустое поле, то лучший ход будет - занять центральную клетку
+    if is_board_empty(initial_board):
+        initial_board[1][1] = 'X'
+        best_move = (1, 1)
+    else:
+        best_move = find_best_move(copy.deepcopy(initial_board), last_player)
+        initial_board[best_move[0]][best_move[1]] = "X"
+        if best_move == (-1, -1):
+            best_move = defense(initial_board)
+            initial_board[best_move[0]][best_move[1]] = "X"
+    if best_move == (-1, -1):
+        print("Ход не найден..")
+        exit(0)
     print("Хммм...")
     time.sleep(1)
-    initial_board[best_move[0]][best_move[1]] = "X"
     clear_the_console()
     print(f"Лучший следующий ход: {best_move}")
     print_board(initial_board)
