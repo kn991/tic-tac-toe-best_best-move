@@ -1,3 +1,4 @@
+# coding=utf-8
 import copy
 import time
 from os import system
@@ -49,6 +50,7 @@ def is_board_empty(board) -> bool:
     is_empty = True
     for i in range(3):
         for j in range(3):
+            # если в клетке стоит Х или О, то оно уже не пустое, вернем False
             if board[i][j] == "X" or board[i][j] == "O":
                 return False
     return True
@@ -60,6 +62,7 @@ def defense(board):
     for i in range(3):
         for j in range(3):
             if board[i][j] == "-":
+                # в пустую клетку ставим "О" и если после этого противник выиграет, то возвращаем координаты этой клетки
                 board[i][j] = "O"
                 if is_winner(initial_board, "O"):
                     best_move = (i, j)
@@ -80,10 +83,12 @@ def print_board(board):
 
 # проверяет выиграл ли игрок
 def is_winner(board, player) -> bool:
+    # проверка по столбцам и строкам
     for i in range(3):
         if all(board[i][j] == player for j in range(3)) or all(board[j][i] == player for j in range(3)):
             return True
 
+    # проверка по диагоналям
     diagonal1 = all(board[i][i] == player for i in range(3))
     diagonal2 = all(board[i][2 - i] == player for i in range(3))
     if diagonal1 or diagonal2:
@@ -94,6 +99,7 @@ def is_winner(board, player) -> bool:
 
 # оценка состояние игры
 def evaluate(board, player):
+    # если текущий игрок выиграл, возвращаем 1, проиграл - -1, поле пустое - 0, ничья - Tie
     if is_winner(board, player):
         return 1
     elif is_winner(board, 'X' if player == 'O' else 'O'):
@@ -106,10 +112,13 @@ def evaluate(board, player):
 
 # алгоритм минимакс
 def minimax(board, depth, is_maximizing, player):
+    # оцениваем состояние текущего поля для текущего игрока
     result = evaluate(board, player)
+    # Если игра завершена (есть победитель или ничья), возвращается оценка текущего состояния игры
     if result != 'Tie':
         return result
 
+    # если максимизируем (ищем выигрыш для "Х"), то функция рекурсивно вызывает себя для каждой пустой клетки поля
     if is_maximizing:
         max_eval = float('-inf')
         for i in range(3):
@@ -120,6 +129,7 @@ def minimax(board, depth, is_maximizing, player):
                     board[i][j] = ' '
                     max_eval = max(max_eval, eval)
         return max_eval
+    # если минимизируем, то функция рекурсивно вызывает себя для нахождения минимальной оценки
     else:
         min_eval = float('inf')
         for i in range(3):
@@ -134,6 +144,7 @@ def minimax(board, depth, is_maximizing, player):
 
 # ищет лучший ход
 def find_best_move(board, last_player):
+    # ставим противоположного игрока
     player = 'O' if last_player == 'X' else 'X'
 
     best_val = float('-inf')
@@ -142,8 +153,10 @@ def find_best_move(board, last_player):
     for i in range(3):
         for j in range(3):
             if board[i][j] == ' ':
+                # в пустую клетку ставим символ противника и вызываем функцию минимакс, чтобы получить оценку этого хода
                 board[i][j] = player
                 move_val = minimax(board, 0, False, player)
+                # отменяем последний ход
                 board[i][j] = ' '
 
                 if move_val == 1:
@@ -153,7 +166,7 @@ def find_best_move(board, last_player):
 
 
 def main():
-    last_player = 'X'
+    last_player = 'O'
     ans = int(input("Как вы хотите вводить игровое поле?\n"
                     "(1) - Консоль\n"
                     "(2) - Файлик\n"))
@@ -161,7 +174,7 @@ def main():
     if ans == 1:
         read_the_board_from_console()
     elif ans == 2:
-        print("В папке с программкой лежит файл 'board.py'. Введите в него игровое поле и отправтье 'OK',"
+        print("В папке с программкой лежит файл 'board.txt'. Введите в него игровое поле и отправтье 'OK',"
               "когда введете")
         print("'X' - крестик\n"
               "'O' - нолик\n"
